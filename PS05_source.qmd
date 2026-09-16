@@ -1,6 +1,6 @@
 ---
 title: "Problem Set 05: Regression with One Categorical Variable"
-author: "Your Name"
+author: "Damien Lightsey"
 date: last-modified
 date-format: "[Last modified on] MMMM DD, YYYY HH:mm:ss zzz"
 format: 
@@ -54,7 +54,7 @@ glimpse(hate_crimes)
 
 Be sure **ALSO** to examine the data in the viewer.
 
-Each case/row in these data is a state in the US. The response variable we will consider is `hate_crimes`, which is the number of hate crimes per 100k individuals in the 10 days after the 2016 US election as measured by the Southern Poverty Law Center (SPLC).
+Each case/row in this data is a state in the US. The response variable we will consider is `hate_crimes`, which is the number of hate crimes per 100k individuals in the 10 days after the 2016 US election as measured by the Southern Poverty Law Center (SPLC).
 
 This week we will use three categorical explanatory variables in this data set:
 
@@ -79,7 +79,11 @@ Create a visual model of these data (a graph) that will allow you to conduct an 
 ::: {.callout-important icon="false" collapse="false" title="Problem 1 Answers"}
 ```{r}
 # Type your code and comments inside the code chunk
-
+hate_crimes |>
+  select(hate_crimes, trump_support)-> data_set1
+ggplot(data_set1, aes(x = trump_support, y = hate_crimes, color = trump_support)) +
+  geom_boxplot()+
+  labs(x = "Trump Support", y = "Hate Crimes per 100k individuals", title = "The Relationship between Hate Crimes and Trump Support during 2016")
 
 ```
 :::
@@ -89,7 +93,7 @@ Create a visual model of these data (a graph) that will allow you to conduct an 
 :::
 
 ::: {.callout-important icon="false" collapse="false" title="Problem 2 Answers"}
--   Delete this and put your text answer here.
+-   The median and interquartile range appears to be higher the lower the support for Trump in an area. With our previous examinations relating to poverty and Trump support, this information appears unexpectedly.
 :::
 
 ::: {.callout-note icon="false" title="Problem 3"}
@@ -99,7 +103,9 @@ Create a model that examines the relationship between hate crime rates and the l
 ::: {.callout-important icon="false" collapse="false" title="Problem 3 Answers"}
 ```{r}
 # Type your code and comments inside the code chunk
-
+hate_mod <- lm(hate_crimes ~ trump_support, data = data_set1)
+get_regression_table(hate_mod) -> T1
+T1
 ```
 :::
 
@@ -108,7 +114,7 @@ What does the intercept mean in this regression table?
 :::
 
 ::: {.callout-important icon="false" collapse="false" title="Problem 4 Answers"}
--   Delete this and put your text answer here.
+-   It is the estimated increase of hate crimes per 100k people for an area of high Trump support.
 :::
 
 ::: {.callout-note icon="false" title="Problem 5"}
@@ -116,11 +122,11 @@ What does the model estimate as the number of hate crimes per 100,000 people in 
 :::
 
 ::: {.callout-important icon="false" collapse="false" title="Problem 5 Answers"}
--   Delete this and put your text answer here.
+-   The model estimates that the number of hate crimes per 100k people in a low level trump support area is 0.191+0.269 = 0.46
 
 ```{r}
 # Type your code and comments inside the code chunk
-
+T1 |> summarise(sum = sum(T1[1, "estimate"] + T1[2, "estimate"]))
 ```
 :::
 
@@ -131,10 +137,10 @@ Does the model estimate that hate crimes are more frequent in states that show "
 ::: {.callout-important icon="false" collapse="false" title="Problem 6 Answers"}
 ```{r}
 # Type your code and comments inside the code chunk
-
+T1 |> summarize(difference = (sum(T1[1, "estimate"] + T1[3, "estimate"]) - T1[1,"estimate"]))
 ```
 
--   Delete this and put your text answer here.
+-   Since subtracting the value of the `low` level Trump support quantity of `hate crimes` by the `high` level Trump support quantity of `hate_crimes` nets us a positive value, it is safe to say that, by the model's standards, hate crimes are more prominent in low level Trump support areas.
 :::
 
 ::: {.callout-note icon="false" title="Problem 7"}
@@ -144,10 +150,10 @@ How much greater were hate crimes in "medium" Trump-support states compared to "
 ::: {.callout-important icon="false" collapse="false" title="Problem 7 Answers"}
 ```{r, label = "delta"}
 # Type your code and comments inside the code chunk
-
+T1|> summarize(T1[3, "estimate"])
 ```
 
--   Delete this and put your text answer here.
+-   Per 100k people, in an area with `medium` level Trump support, there is an increase in `hate_crimes` by a value of `0.031`.
 :::
 
 ::: {.callout-note icon="false" title="Problem 8"}
@@ -157,14 +163,13 @@ What are the three possible fitted values $\hat{y}$ for this model? Hint: use th
 ::: {.callout-important icon="false" collapse="false" title="Problem 8 Answers"}
 ```{r}
 # Type your code and comments inside the code chunk
-
+get_regression_points(hate_mod)
 ```
+-   The $\hat{y}$ value is equivalent to the $\hat{hate crimes}$. For the `low` level Trump support areas, the value is `0.46`.
 
--   Delete this and put your text answer here.
+-   The $\hat{y}$ value for the `medium` level Trump support areas is `0.222`.
 
--   Delete this and put your text answer here.
-
--   Delete this and put your text answer here.
+-   The $\hat{y}$ value for the `high` level Trump support areas is `0.191`.
 :::
 
 ::: {.callout-note icon="false" title="Problem 9"}
@@ -178,7 +183,7 @@ group_by(trump_support) |>
 :::
 
 ::: {.callout-important icon="false" collapse="false" title="Problem 9 Answers"}
--   Delete this and put your text answer here.
+-   The mean values, comparitively to the $\hat{y}$ values, are the same!
 :::
 
 ## The Regression Equation
@@ -232,14 +237,17 @@ Solve the regression equation for a state in which `trump_support` is "high".
 :::
 
 ::: {.callout-important icon="false" collapse="false" title="Problem 10 Answers"}
-Your $LaTeX$ here
+$$\widehat{y} = `r coef(hate_mod)[1]` + (`r coef(hate_mod)[2]` \times 0) + (`r coef(hate_mod)[3]` \times 0)$$
+$$\widehat{y} = `r coef(hate_mod)[1]` + 0 + 0$$
+$$\widehat{y} = `r coef(hate_mod)[1]`$$
 
 ```{r}
 # Type your code and comments inside the code chunk
-
+T1|>
+  summarize(T1[1, "estimate"])
 ```
 
--   Delete this and put your text answer here.
+-   the $\hat{y}$ for a state with a `high` level of Trump support is 0.191.
 :::
 
 ::: {.callout-note icon="false" title="Problem 11"}
@@ -251,10 +259,11 @@ Do these results surprise you? (There is no right answer to this question.)
 ::: {.callout-important icon="false" collapse="false" title="Problem 11 Answers"}
 ```{r}
 # Type your code and comments inside the code chunk
-
+hate_crimes|>
+  arrange(desc(hate_crimes))
 ```
 
--   Delete this and put your text answer here.
+-   The states with the top hate crime rates were `Oregon`, `Washington`, `Massachusetts`, `Minnesota`, and `Maine`. The Trump support levels for each state were `low`.I had no prior expectations on which states had higher hate crime rates based on Trump support, so I was not surprised.
 :::
 
 # Hate Crimes and Unemployment
@@ -271,7 +280,11 @@ Create a visual model of this data (a graph) that will allow you to conduct an "
 ::: {.callout-important icon="false" collapse="false" title="Problem 12 Answers"}
 ```{r}
 # Type your code and comments inside the code chunk
-
+hate_crimes |>
+  select(hate_crimes, unemployment) -> data_set2
+ggplot(data_set2, aes(x = unemployment, y = hate_crimes, color = unemployment))+
+  geom_boxplot()+
+  labs(x = "Level of unemployment", y = "Hate crimes per 100k individuals", title = "Relationship between hate crimes and unemplyment rates in 2016")
 ```
 :::
 
@@ -282,7 +295,9 @@ Create a model that examines the relationship between hate crime rates and the u
 ::: {.callout-important icon="false" collapse="false" title="Problem 13 Answers"}
 ```{r}
 # Type your code and comments inside the code chunk
-
+job_mod <- lm(hate_crimes ~ unemployment, data = data_set2)
+get_regression_table(job_mod) -> T2
+T2
 ```
 :::
 
@@ -291,7 +306,7 @@ Write out the regression equation for `job_mod`.
 :::
 
 ::: {.callout-important icon="false" collapse="false" title="Problem 14 Answers"}
-Write your equation with $LaTeX$ here.
+$\widehat{y} = `r coef(job_mod)[1]` + (`r coef(job_mod)[2]` \times D_1)$
 :::
 
 ::: {.callout-note icon="false" title="Problem 15"}
@@ -299,7 +314,7 @@ Interpret the estimate of the intercept from the table below.
 :::
 
 ::: {.callout-important icon="false" collapse="false" title="Problem 15 Answers"}
--   Delete this and put your text answer here.
+-   The estimated intercept is the approximate number of hate crimes per 100k individuals in a state with `high` unemployment. We can assume it is the `high` variable because "high" comes before "low" alphanumerically.
 :::
 
 ::: {.callout-note icon="false" title="Problem 16"}
@@ -309,10 +324,10 @@ What does the model estimate the number of hate crimes per 100,000 people to be 
 ::: {.callout-important icon="false" collapse="false" title="Problem 16 Answers"}
 ```{r}
 # Type your code and comments inside the code chunk
-
+T2 |> summarize(sum = sum(T2[1, "estimate"] + T2[2, "estimate"]))
 ```
 
--   Delete this and put your text answer here.
+-   The model estimates that the number of hate crimes per 100k people in a state with `low` unemployment is `0.32`.
 :::
 
 ::: {.callout-note icon="false" title="Problem 17"}
@@ -322,10 +337,10 @@ What are the two possible fitted values $\widehat{y}$ for this model? Why are th
 ::: {.callout-important icon="false" collapse="false" title="Problem 17 Answers"}
 ```{r}
 # Type your code and comments inside the code chunk
-
+T2 |> summarize(yhat_low = sum(T2[1, "estimate"] + T2[2, "estimate"]),yhat_high = T2[1, "estimate"])
 ```
 
--   Delete this and put your text answer here.
+-   The 2 possible values for $\widehat{y}$ are 0.32 for `low` unemployment states and 0.289 for `high` unemployment states. There are only two values for $\widehat{y}$ because we only have two predictor variables, and since those values do not fluctuate, the $\widehat{y}$ value is the same as the intercept.
 :::
 
 ::: {.callout-note icon="false" title="Problem 18"}
@@ -335,10 +350,10 @@ Use the `get_regression_points()` function to generate a table showing the fitte
 ::: {.callout-important icon="false" collapse="false" title="Problem 18 Answers"}
 ```{r}
 # Type your code and comments inside the code chunk
-
+get_regression_points(job_mod)
 ```
 
--   Delete this and put your text answer here.
+-   Residuals are calculated by taking the amount of hate crimes, then dividing it by 100,000 and subtracting that value from the estimated `hate_crimes` value which follows a similar formula, the estimated value is also known as $\widehat{y}$.
 :::
 
 # Hate Crimes and Household Income
@@ -350,7 +365,10 @@ Create a model that examines the relationship between `hate_crimes` and median h
 ::: {.callout-important icon="false" collapse="false" title="Problem 19 Answers"}
 ```{r}
 # Type your code and comments inside the code chunk
-
+data_set3 <- hate_crimes |>
+  select(hate_crimes, median_house_inc)
+job_med_mod <- lm(hate_crimes ~ median_house_inc, data = data_set3)
+summary(job_med_mod)
 ```
 :::
 
@@ -359,7 +377,7 @@ Were there more hate crimes in areas with high or low median household incomes? 
 :::
 
 ::: {.callout-important icon="false" collapse="false" title="Problem 20 Answers"}
--   Delete this and put your text answer here.
+-   There were more hate crimes committed in areas with `high` median household income, demonstrated by the offset of `median_house_inclow` being -0.16041, since this number is negative, it means there is a lower value in areas of `low` median household income.
 :::
 
 ::: {.callout-note icon="false" title="Problem 21"}
@@ -369,7 +387,8 @@ Show the first six rows of the output created from running the `get_regression_p
 ::: {.callout-important icon="false" collapse="false" title="Problem 21 Answers"}
 ```{r}
 # Type your code and comments inside the code chunk
-
+get_regression_points(job_med_mod) -> T3
+T3
 ```
 :::
 
@@ -380,10 +399,10 @@ Take a look at data for Maine (row 2 of `hate_crimes`). Did the model (`job_med_
 ::: {.callout-important icon="false" collapse="false" title="Problem 22 Answers"}
 ```{r}
 # Type your code and comments inside the code chunk
-
+T3 |> summarise(T3[2, "residual"])
 ```
 
--   Delete this and put your text answer here.
+-   The value of the `residual` for Maine is a positive number, indicating that the model **overpredicted** the value of Maine's hate crimes per 100k people by 0.387.
 :::
 
 # **EXTRA**
